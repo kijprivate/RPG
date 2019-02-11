@@ -17,7 +17,7 @@ public class Enemy : MonoBehaviour,IDamageable {
     [SerializeField] GameObject projectileSocket;
 
     bool isAttacking = false;
-    float currentHealthPoints = 100f;
+    float currentHealthPoints;
     AICharacterControl aiCharacterControl = null;
     NavMeshAgent nmAgent = null;
     GameObject player = null;
@@ -28,6 +28,7 @@ public class Enemy : MonoBehaviour,IDamageable {
         aiCharacterControl = GetComponent<AICharacterControl>();
         nmAgent = GetComponent<NavMeshAgent>();
         nmAgent.stoppingDistance = attackRadius;
+        currentHealthPoints = maxHealthPoints;
     }
 
     private void Update()
@@ -64,6 +65,10 @@ public class Enemy : MonoBehaviour,IDamageable {
     public void TakeDamage(float damage)
     {
         currentHealthPoints = Mathf.Clamp(currentHealthPoints - damage, 0f, maxHealthPoints);
+        if(currentHealthPoints <= 0f)
+        {
+            Destroy(gameObject);
+        }
     }
 
     void SpawnProjectile()
