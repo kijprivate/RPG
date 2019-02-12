@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.ThirdPerson;
+using UnityEngine.Assertions;
 
 public class Player : MonoBehaviour,IDamageable {
 
@@ -11,16 +12,40 @@ public class Player : MonoBehaviour,IDamageable {
     [SerializeField] float minTimeBetweenHits = 0.5f;
     [SerializeField] float maxAttackRange = 2f;
 
+    [SerializeField] Weapon weapon;
+
     private CameraRaycaster camRay;
     GameObject currentTarget;
     float currentHealthPoints;
     float timeOfLastHit=0f;
+    Animator animator;
 
     private void Start()
     {
         camRay = FindObjectOfType<CameraRaycaster>();
         camRay.notifyMouseClickObservers += OnMouseClicked;
         currentHealthPoints = maxHealthPoints;
+        animator = GetComponent<Animator>();
+
+        PutWeaponInHand();
+    }
+
+    private void PutWeaponInHand()
+    {
+        var weaponPrefab = weapon.GetWeaponPrefab();
+        var dominantHand = RequestDominantHand();
+        Instantiate(weaponPrefab, dominantHand.transform);
+        weaponPrefab.transform.localPosition = weapon.weaponGrid.localPosition;
+        weaponPrefab.transform.localRotation = weapon.weaponGrid.localRotation;
+    }
+
+    private GameObject RequestDominantHand()
+    {
+        var dominantHands = GetComponentsInChildren<DominantHand>();
+        int numberOfDominantHands = dominantHands.Length;
+        Assert.AreNotEqual(numberOfDominantHands, 0, "Couldnt find dominant hand");
+        Assert.IsFalse(numberOfDominantHands > 1, "Multiple dominant hands");
+        return dominantHands[0].gameObject;
     }
 
     public float healthAsPercentage
@@ -48,6 +73,7 @@ public class Player : MonoBehaviour,IDamageable {
             if( Time.time - timeOfLastHit > minTimeBetweenHits)
             {
                 enemyComponent.TakeDamage(damage);
+                animator.SetTrigger("Attack");
                 timeOfLastHit = Time.time;
             }
         }
